@@ -1,0 +1,186 @@
+AI Lab 7: Text Chunking & Semantic Suggestions | Rasikh Ali (42365)
+Python 3.11.6, with all-MiniLM-L6-v2 on CPU
+
+========================================================================
+LAB 7 / 6.3  Guided example: chunking with source offsets
+========================================================================
+===== 12-word budget | words in source: 19
+word windows | chunks: 2 | duplicate words: 4
+  0 73 'Late work is penalized. Illness may qualify for an extension when medical'
+  48 122 'an extension when medical evidence is provided. Ask the coordinator first.'
+sentence aware | chunks: 3 | duplicate words: 0
+  0 23 'Late work is penalized.'
+  24 95 'Illness may qualify for an extension when medical evidence is provided.'
+  96 122 'Ask the coordinator first.'
+===== 20-word budget | words in source: 19
+word windows | chunks: 1 | duplicate words: 0
+  0 122 'Late work is penalized. Illness may qualify for an extension when medical evidence is provided. Ask the coordinator first.'
+sentence aware | chunks: 1 | duplicate words: 0
+  0 122 'Late work is penalized. Illness may qualify for an extension when medical evidence is provided. Ask the coordinator first.'
+===== long sentence, 12-word budget | words in source: 51
+word windows | chunks: 6 | duplicate words: 20
+  0 73 'Late work is penalized. Illness may qualify for an extension when medical'
+  48 127 'an extension when medical evidence is provided. Ask the coordinator first. This'
+  100 175 'the coordinator first. This sentence keeps going without any full stop This'
+  157 223 'any full stop This sentence keeps going without any full stop This'
+  205 271 'any full stop This sentence keeps going without any full stop This'
+  253 315 'any full stop This sentence keeps going without any full stop.'
+sentence aware | chunks: 6 | duplicate words: 0
+  0 23 'Late work is penalized.'
+  24 95 'Illness may qualify for an extension when medical evidence is provided.'
+  96 122 'Ask the coordinator first.'
+  123 196 'This sentence keeps going without any full stop This sentence keeps going'
+  197 266 'without any full stop This sentence keeps going without any full stop'
+  267 315 'This sentence keeps going without any full stop.'
+
+========================================================================
+LAB 7 / Task  Word windows vs sentence-aware chunks + boundary tests
+========================================================================
+Boundary tests passed: empty text, short document (shorter than budget), invalid overlap x4, 95-word sentence -> 3 fallback windows, offsets == source
+
+Documents: {'handbook_late': 215, 'it_password': 191, 'printer_help': 181} total words: 587
+
+strategy    chunks     min_w    mean_w     max_w  dup_words labeled spans kept whole
+window/0        16        15      36.7        40          0 1/3 ['handbook_late']
+window/10       20        11      37.9        40        170 0/3 []
+sentence        21        12      28.0        40          0 1/3 ['it_password']
+
+--- 0: chunks of handbook_late (id, start, end, words, first/last words)
+  handbook_late:0:0              0   271  40  Assessment Handbook, Section 4 (version ... exact moment a file
+  handbook_late:0:1            272   514  40  is received. Late submission is ... Requests that arrive after
+  handbook_late:0:2            515   773  40  the deadline are treated as ... the student by university
+  handbook_late:0:3            774  1031  40  email. Because extension decisions depend ... read the brief carefully,
+  handbook_late:0:4           1032  1271  40  keep copies of every document ... or the word limit.
+  handbook_late:0:5           1272  1355  15  Group projects follow the same ... named in the request.
+
+--- 10: chunks of handbook_late (id, start, end, words, first/last words)
+  handbook_late:10:0             0   271  40  Assessment Handbook, Section 4 (version ... exact moment a file
+  handbook_late:10:1           216   443  40  and the learning portal records ... evidence is sent to
+  handbook_late:10:2           388   646  40  may request an extension if ... the assessment officer, reviews
+  handbook_late:10:3           579   845  40  was admitted to hospital. Dr. ... the evidence supplied, the
+  handbook_late:10:4           774  1031  40  email. Because extension decisions depend ... read the brief carefully,
+  handbook_late:10:5           964  1215  40  modules, students are strongly advised ... only the deadline; it
+  handbook_late:10:6          1154  1355  35  last day. An approved extension ... named in the request.
+
+--- sentence: chunks of handbook_late (id, start, end, words, first/last words)
+  handbook_late:sentence:0       0   160  21  Assessment Handbook, Section 4 (version ... in all undergraduate modules.
+  handbook_late:sentence:1     161   342  32  Each assignment brief states a ... the marks per day.
+  handbook_late:sentence:2     343   487  23  However, a student with a ... coordinator before the deadline.
+  handbook_late:sentence:3     488   695  31  Requests that arrive after the ... three working days, e.g.
+  handbook_late:sentence:4     696   780  14  a signed note from a ... student by university email.
+  handbook_late:sentence:5     781  1036  40  Because extension decisions depend on ... the brief carefully, keep
+  handbook_late:sentence:6    1037  1163  21  copies of every document they ... until the last day.
+  handbook_late:sentence:7    1164  1355  33  An approved extension changes only ... named in the request.
+
+Sentence-splitter failures (abbreviations):
+   [605:609] 'Dr.'
+   [609:696] 'Khan, the assessment officer, reviews medical evidence within three working days, e.g.'
+   [696:781] 'a signed note from a registered clinic, and informs the student by university email.'
+
+Longest sentence: 61 words (> 40 budget, uses window fallback)
+
+========================================================================
+LAB 7 / 6.7  Suggested questions from the FAQ list (TF-IDF)
+========================================================================
+Suggested questions for 'assignment upload' (tfidf):
+   faq:submit | Where do I submit my assignment? (0.597)
+Suggested questions for 'forgot login' (tfidf):
+   faq:password | How do I reset my password? (0.328)
+Suggested questions for 'blank' (tfidf):
+   faq:printer | What should I do if the printer prints blank pages? (0.238)
+
+========================================================================
+LAB 7 / 6.7  Suggested questions from the FAQ list (embeddings)
+========================================================================
+Suggested questions for 'assignment upload' (embedding):
+   faq:submit | Where do I submit my assignment? (0.671)
+   faq:late | Can illness justify a late submission? (0.086)
+   faq:wifi | How do I connect to campus Wi-Fi? (0.058)
+Suggested questions for 'forgot login' (embedding):
+   faq:password | How do I reset my password? (0.577)
+   faq:wifi | How do I connect to campus Wi-Fi? (0.278)
+   faq:late | Can illness justify a late submission? (0.103)
+Suggested questions for 'blank' (embedding):
+   faq:printer | What should I do if the printer prints blank pages? (0.389)
+   faq:submit | Where do I submit my assignment? (0.159)
+   faq:password | How do I reset my password? (0.115)
+
+========================================================================
+LAB 7 / 6.2  Guided example: embeddings and cosine similarity
+========================================================================
+Embedding shape: (3, 384)
+
+Query: How can I recover my login?
+0 0.627 Reset a forgotten password using the recovery link.
+1 0.072 Submit assignments through the learning portal.
+2 0.018 Check ink levels when a printer produces blank pages.
+
+Query: I do not need a password reset
+0 0.713 Reset a forgotten password using the recovery link.
+2 0.151 Check ink levels when a printer produces blank pages.
+1 0.1 Submit assignments through the learning portal.
+
+Zero-vector check: Zero vector: cosine similarity is undefined
+
+========================================================================
+LAB 7 / Task  Semantic suggestions over chunks: TF-IDF vs embeddings
+========================================================================
+Backend: tfidf
+it:sentence:0 score=0.343
+A forgotten password can be reset using the recovery link.
+assessment:sentence:0 score=0.000
+Assignments are uploaded through the learning portal.
+Backend: embedding
+it:sentence:0 score=0.526
+A forgotten password can be reset using the recovery link.
+assessment:sentence:0 score=0.021
+Assignments are uploaded through the learning portal.
+
+======================================================================
+Query: I was unwell, can I get more time for my assignment? | expected document: handbook_late
+  [tfidf]
+   1. handbook_late:sentence:1 score=0.181 chars 161-342 <- expected doc
+      evidence: Each assignment brief states a deadline date and time, and the learning portal records the exact moment a file is received. Late submission is penalized at 10% ...
+   2. it_password:sentence:2 score=0.104 chars 364-597 
+      evidence: Never share recovery codes, one-time passwords or verification links with anyone, including people who claim to be IT staff. After five failed sign-in attempts ...
+   3. handbook_late:sentence:3 score=0.101 chars 488-695 <- expected doc
+      evidence: Requests that arrive after the deadline are treated as late submissions unless the student was admitted to hospital. Dr. Khan, the assessment officer, reviews m...
+  [embedding]
+   1. handbook_late:sentence:3 score=0.380 chars 488-695 <- expected doc
+      evidence: Requests that arrive after the deadline are treated as late submissions unless the student was admitted to hospital. Dr. Khan, the assessment officer, reviews m...
+   2. handbook_late:sentence:2 score=0.339 chars 343-487 <- expected doc
+      evidence: However, a student with a documented illness may request an extension if medical evidence is sent to the module coordinator before the deadline.
+   3. handbook_late:sentence:1 score=0.331 chars 161-342 <- expected doc
+      evidence: Each assignment brief states a deadline date and time, and the learning portal records the exact moment a file is received. Late submission is penalized at 10% ...
+======================================================================
+Query: I can't remember how to sign in to my account | expected document: it_password
+  [tfidf]
+   1. it_password:sentence:2 score=0.253 chars 364-597 <- expected doc
+      evidence: Never share recovery codes, one-time passwords or verification links with anyone, including people who claim to be IT staff. After five failed sign-in attempts ...
+   2. it_password:sentence:0 score=0.208 chars 0-159 <- expected doc
+      evidence: IT Help Guide: Account Access (synthetic teaching text). Your university account gives access to email, the learning portal, library services and campus Wi-Fi.
+   3. it_password:sentence:3 score=0.158 chars 598-763 <- expected doc
+      evidence: If the account is still locked after 15 minutes, or if you no longer have access to your personal email, visit the IT service desk in Block C with your student ...
+  [embedding]
+   1. it_password:sentence:1 score=0.542 chars 160-363 <- expected doc
+      evidence: If you forget your password, reset a forgotten password using the recovery link on the login page; the link is sent to the personal email address registered dur...
+   2. it_password:sentence:4 score=0.503 chars 764-880 <- expected doc
+      evidence: Staff at the desk will verify your identity and issue a temporary password that must be changed at the next sign-in.
+   3. it_password:sentence:5 score=0.440 chars 881-1089 <- expected doc
+      evidence: Multi-factor authentication is mandatory for all accounts; register the authenticator app before the end of the first week of term. Contact the desk at it-help@...
+======================================================================
+Query: my printouts come out with nothing on them | expected document: printer_help
+  [tfidf]
+   1. handbook_late:sentence:2 score=0.160 chars 343-487 
+      evidence: However, a student with a documented illness may request an extension if medical evidence is sent to the module coordinator before the deadline.
+   2. it_password:sentence:3 score=0.127 chars 598-763 
+      evidence: If the account is still locked after 15 minutes, or if you no longer have access to your personal email, visit the IT service desk in Block C with your student ...
+   3. it_password:sentence:2 score=0.106 chars 364-597 
+      evidence: Never share recovery codes, one-time passwords or verification links with anyone, including people who claim to be IT staff. After five failed sign-in attempts ...
+  [embedding]
+   1. printer_help:sentence:1 score=0.528 chars 178-399 <- expected doc
+      evidence: For blank printer pages, check ink levels and run the cleaning utility from the printer menu, then print a test page afterwards. If the test page is still blank...
+   2. printer_help:sentence:0 score=0.439 chars 0-177 <- expected doc
+      evidence: Equipment Troubleshooting: Lab Printers and Scanners (synthetic teaching text). Warning: switch the printer off and wait for the fuser to cool before opening an...
+   3. printer_help:sentence:5 score=0.396 chars 980-1076 <- expected doc
+      evidence: Toner and ink cartridges are stored in the technician's office and are issued only by lab staff.
